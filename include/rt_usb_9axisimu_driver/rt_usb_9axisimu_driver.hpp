@@ -57,6 +57,11 @@ private:
   double magnetic_field_stddev_;
   rt_usb_9axisimu::Consts consts;
 
+  unsigned char bin_read_buffer_[rt_usb_9axisimu::Consts::READ_BUFFER_SIZE];
+  unsigned char ascii_read_buffer_[rt_usb_9axisimu::Consts::READ_BUFFER_SIZE];
+  unsigned int bin_read_buffer_idx_ = 0;
+  unsigned int ascii_read_buffer_idx_ = 0;
+
   enum DataFormat
   {
     NONE = 0,
@@ -66,7 +71,6 @@ private:
     ASCII,
     INCORRECT
   };
-  bool has_completed_format_check_;
   DataFormat data_format_;
   bool has_refreshed_imu_data_;
 
@@ -74,8 +78,9 @@ private:
   int16_t combineByteData(unsigned char data_h, unsigned char data_l);
   // Method to extract binary sensor data from communication buffer
   rt_usb_9axisimu::ImuData<int16_t> extractBinarySensorData(unsigned char * imu_data_buf);
-  bool isBinarySensorData(unsigned char * imu_data_buf);
+  bool isBinarySensorData(unsigned char * imu_data_buf, unsigned int data_size);
   bool readBinaryData(void);
+  bool isAsciiSensorData(unsigned char * imu_data_buf, unsigned int data_size);
   bool isValidAsciiSensorData(std::vector<std::string> imu_data_vector_buf);
   bool readAsciiData(void);
 
@@ -90,8 +95,7 @@ public:
 
   bool startCommunication();
   void stopCommunication(void);
-  void checkDataFormat(void);
-  bool hasCompletedFormatCheck(void);
+  void checkDataFormat(const double timeout = 5.0);
   bool hasAsciiDataFormat(void);
   bool hasBinaryDataFormat(void);
   bool hasRefreshedImuData(void);
